@@ -3,30 +3,30 @@ import 'firebase/firestore';
 import 'firebase/auth';
 
 const config = {
-    apiKey: "AIzaSyC0DOnYhzzRc_C8XyosrtD-x8bPf2sj2Bc",
-    authDomain: "crwn-db-ba2de.firebaseapp.com",
-    databaseURL: "https://crwn-db-ba2de.firebaseio.com",
-    projectId: "crwn-db-ba2de",
-    storageBucket: "crwn-db-ba2de.appspot.com",
-    messagingSenderId: "951469815271",
-    appId: "1:951469815271:web:ca5267cefc0b2d505db942",
-    measurementId: "G-033N0XJSV2"
-  };
+  apiKey: "AIzaSyC0DOnYhzzRc_C8XyosrtD-x8bPf2sj2Bc",
+  authDomain: "crwn-db-ba2de.firebaseapp.com",
+  databaseURL: "https://crwn-db-ba2de.firebaseio.com",
+  projectId: "crwn-db-ba2de",
+  storageBucket: "crwn-db-ba2de.appspot.com",
+  messagingSenderId: "951469815271",
+  appId: "1:951469815271:web:ca5267cefc0b2d505db942",
+  measurementId: "G-033N0XJSV2"
+};
 
 
-export const createUserProfileDocument = async (userAuth,additionalData) => {
+export const createUserProfileDocument = async (userAuth, additionalData) => {
   if (!userAuth) return;
   // set the user ref to 
   const userRef = firestore.doc(`users/${userAuth.uid}`);
-  const collectionRef= firestore.collection('users');
+  const collectionRef = firestore.collection('users');
 
   const snapShot = await userRef.get();
   const collectionSnapshot = await collectionRef.get();
-  console.log({collectionSnapshot});
+  console.log({ collectionSnapshot });
 
-  
-  if(!snapShot.exists){
-    const {displayName, email} = userAuth;
+
+  if (!snapShot.exists) {
+    const { displayName, email } = userAuth;
     const createdAt = new Date();
     try {
       await userRef.set({
@@ -35,33 +35,33 @@ export const createUserProfileDocument = async (userAuth,additionalData) => {
         createdAt,
         ...additionalData
       })
-    } catch (error){
+    } catch (error) {
       console.log('error creating user', error.message);
     }
   }
-  
+
   return userRef;
 
 };
 
-export const addCollectionAndDocuments =async(collectionKey, objectsToAdd) => {
+export const addCollectionAndDocuments = async (collectionKey, objectsToAdd) => {
   const collectionRef = firestore.collection(collectionKey);
   console.log(collectionRef);
 
   const batch = firestore.batch();
-  objectsToAdd.forEach(obj =>{
+  objectsToAdd.forEach(obj => {
     const newDocRef = collectionRef.doc();
     console.log(newDocRef);
-    batch.set(newDocRef,obj)
+    batch.set(newDocRef, obj)
   });
 
   return await batch.commit()
 
 };
 
-export const convertCollectionsSnapshotToMaps = (collections)=> {
-  const transformedCollection = collections.docs.map(doc =>{
-    const {title,items} = doc.data();
+export const convertCollectionsSnapshotToMaps = (collections) => {
+  const transformedCollection = collections.docs.map(doc => {
+    const { title, items } = doc.data();
 
     return {
       routeName: encodeURI(title.toLowerCase()),
@@ -71,10 +71,19 @@ export const convertCollectionsSnapshotToMaps = (collections)=> {
     }
   });
 
-  return transformedCollection.reduce((accumulator, collection)=> {
-    accumulator[collection.title.toLowerCase()]= collection;
+  return transformedCollection.reduce((accumulator, collection) => {
+    accumulator[collection.title.toLowerCase()] = collection;
     return accumulator
-  },{});
+  }, {});
+}
+
+export const getCurrentUser = () => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = auth.onAuthStateChanged(userAuth => {
+      unsubscribe();
+      resolve(userAuth);
+    }, reject)
+  })
 }
 
 firebase.initializeApp(config);
